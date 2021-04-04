@@ -1,4 +1,10 @@
+import time
+import curses
+from curses import textpad
 import math
+
+menu = ['AddStudent', 'AddCourse', 'AddMark', 'ShowStudent', 'ShowCourse', 'ShowMark', 'StudentAverageGpa',
+        'SortDescendingOrder', 'Exit']
 
 
 class Student:
@@ -101,43 +107,25 @@ class Mark:
         print("Student Id: {}, Student Name: {}, Student Mark: {} ".format(self.studentId, studentName, self.grade))
 
 
-def enterNumberOfStudents():
-    numberOfStudents = int(input("Enter the number of students: \n"))
-    return numberOfStudents
-
-
-def enterStudentsInfo():
-    studentId = int(input("Enter student Id \n"))
-    studentName = input("Enter student name \n")
-    studentDob = input("Enter student date of birth \n")
-    return studentId, studentName, studentDob
-
-
-def enterNumberOfCourses():
-    numberOfCourses = int(input("Enter the number of courses \n"))
-    return numberOfCourses
-
-
-def enterCoursesInfo():
-    courseId = int(input("Enter course Id \n"))
-    courseName = input("Enter course name \n")
-    noOfCredit = int(input("Enter number of credit \n"))
-    return courseId, courseName, noOfCredit
-
-
-def showMarkInformationForSpecificCourse(courseName, students, courses, grades):
-    courseId = 0
+def showMarkInformationForSpecificCourse(courseName, students, courses, grades, stdscr):
+    courseId = ""
+    studentName = ""
+    studentGrade = ""
+    x = 0
+    y = 5
+    num = 0
     for i in range(len(courses)):
-        if (courses[i].get_course_name() == courseName):
+        if courses[i].get_course_name() == courseName:
             courseId = courses[i].get_course_id()
-            print("CourseId: ", courseId)
             break
 
     for j in range(len(grades)):
         if int(grades[j].get_course_id()) == int(courseId):
             for k in range(len(students)):
                 if int(students[k].get_student_id()) == int(grades[j].get_student_id()):
-                    grades[j].displayStudentMark(students[k].get_name())
+                    stdscr.addstr(y + num, x, "Student name: " + str(students[k].get_name()) + ' Student grade: ' + str(
+                        grades[j].get_grade()))
+                    num += 2
                     break
 
 
@@ -148,7 +136,7 @@ def findStudentAverageMark(studentId, marks, courses):
     totalMark = 0
 
     for i in range(len(marks)):
-        if marks[i].get_student_id() == studentId:
+        if int(marks[i].get_student_id()) == int(studentId):
             studentGrades.insert(len(studentGrades) - 1, marks[i].get_grade())
             for j in range(len(courses)):
                 if (int(courses[j].get_course_id()) == int(marks[i].get_course_id())):
@@ -160,56 +148,102 @@ def findStudentAverageMark(studentId, marks, courses):
         totalMark += studentGrades[i] * studentCredit[i]
     for i in range(len(studentCredit)):
         totalCredit += int(studentCredit[i])
-    print(studentGrades, studentCredit)
-    print(totalMark, totalCredit)
     averageGpa = totalMark / totalCredit
     return averageGpa
 
 
-if __name__ == "__main__":
+def print_menu(stdscr, selected_row_idx):
+    stdscr.clear()
+    h, w = stdscr.getmaxyx()
+    for idx, row in enumerate(menu):
+        x = w // 2 - len(row) // 2
+        y = h // 2 - len(menu) // 2 + idx
+        if idx == selected_row_idx:
+            stdscr.attron(curses.color_pair(1))
+            stdscr.addstr(y, x, row)
+            stdscr.attroff(curses.color_pair(1))
+        else:
+            stdscr.addstr(y, x, row)
+    stdscr.refresh()
+
+
+def main(stdscr):
     students = []
     courses = []
     grades = []
     averageGpa = []
-    numberOfStudents = enterNumberOfStudents()
-    for i in range(0, numberOfStudents):
-        m = 0
-        studentId, studentName, studentDob = enterStudentsInfo()
-        student = Student(studentId, studentName, studentDob)
-        if (i == 0):
-            students.append(student)
-        for j in range(len(students)):
-            if (students[j] == student):
-                students[j] = student
-                m = 1
-                break
-        if (m == 0):
-            students.append(student)
+    curses.curs_set(0)
+    curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
+    current_row_idx = 0
+    print_menu(stdscr, current_row_idx)
 
-    numberOfCourses = enterNumberOfCourses()
-    for i in range(0, numberOfCourses):
-        m = 0
-        courseId, courseName, noOfCredit = enterCoursesInfo()
-        course = Course(courseId, courseName, noOfCredit)
-        if (i == 0):
-            courses.append(course)
-        for j in range(len(courses)):
-            if (course == courses[j]):
-                courses[j] = course
-                m = 1
-                break
-        if (m == 0):
-            courses.append(course)
+    while 1:
+        key = stdscr.getch()
 
-    choice = input("y for enter studentMark, n for not \n")
-    while (choice == "y"):
-        s = input("enter m for marks input other to cancel ")
-        if (s == "m"):
-            studentId = int(input("Enter student Id \n"))
-            courseId = input("Enter courseId \n")
-            mark = float(input("Enter student mark \n"))
-            mark = math.floor(mark)
+        stdscr.clear()
+
+        if key == curses.KEY_UP and current_row_idx > 0:
+            current_row_idx -= 1
+        elif key == curses.KEY_DOWN and current_row_idx < len(menu) - 1:
+            current_row_idx += 1
+        elif (key == curses.KEY_ENTER or key in [10, 13]) and current_row_idx == 0:
+            stdscr.clear()
+            curses.echo()
+            stdscr.addstr(0, 0, 'Hello World')
             m = 0
+            stdscr.addstr(2, 0, "id")
+            studentId = int(stdscr.getstr(3, 0).decode())
+            stdscr.addstr(4, 0, "name")
+            studentName = stdscr.getstr(5, 0).decode()
+            stdscr.addstr(6, 0, 'dob')
+            dob = stdscr.getstr(7, 0).decode()
+            stdscr.addstr(9, 0, str(studentId))
+            student = Student(studentId, studentName, dob)
+            if (len(students) == 0):
+                students.append(student)
+
+            for j in range(len(students)):
+                if (student == students[j]):
+                    students[j] = student
+                    m = 1
+                    break
+                if (m == 0):
+                    students.append(student)
+            stdscr.getch()
+        elif (key == curses.KEY_ENTER or key in [10, 13]) and current_row_idx == 1:
+            stdscr.clear()
+            curses.echo()
+            stdscr.addstr(0, 0, 'Hello World')
+            m = 0
+            stdscr.addstr(2, 0, "id")
+            courseId = int(stdscr.getstr(3, 0).decode())
+            stdscr.addstr(4, 0, "name")
+            courseName = stdscr.getstr(5, 0).decode()
+            stdscr.addstr(6, 0, 'noOfCredit')
+            noOfCredit = int(stdscr.getstr(7, 0).decode())
+            course = Course(courseId, courseName, noOfCredit)
+            if (len(courses) == 0):
+                courses.append(course)
+            for j in range(len(courses)):
+                if (course == courses[j]):
+                    courses[j] = course
+                    m = 1
+                    break
+                if (m == 0):
+                    courses.append(course)
+            stdscr.getch()
+        elif (key == curses.KEY_ENTER or key in [10, 13]) and current_row_idx == 2:
+            stdscr.clear()
+            curses.echo()
+            stdscr.addstr(0, 0, 'Hello World')
+            m = 0
+            stdscr.addstr(2, 0, "studentId")
+            studentId = stdscr.getstr(3, 0).decode()
+            stdscr.addstr(4, 0, "courseId")
+            courseId = stdscr.getstr(5, 0).decode()
+            stdscr.addstr(6, 0, 'mark')
+            mark = float(stdscr.getstr(7, 0).decode())
+            mark = math.floor(mark)
             grade = Mark(studentId, courseId, mark)
             if (len(grades) == 0):
                 grades.append(grade)
@@ -218,39 +252,75 @@ if __name__ == "__main__":
                     grades[j] = grade
                     m = 1
                     break
-            if (m == 0):
-                grades.append(grade)
-        else:
+                if (m == 0):
+                    grades.append(grade)
+            stdscr.getch()
+        elif (key == curses.KEY_ENTER or key in [10, 13]) and current_row_idx == 3:
+            stdscr.clear()
+            curses.echo()
+            stdscr.addstr(0, 0, 'Hello World')
+            stdscr.addstr(2, 0, "studentId")
+            studentId = int(stdscr.getstr(3, 0).decode())
+            for i in range(0, len(students)):
+                if (students[i].get_student_id() == studentId):
+                    stdscr.addstr(6, 0,
+                                  "StudentId: " + str(students[i].get_student_id()) + " Student name: " + students[
+                                      i].get_name() + " Dob: " + students[i].get_dob())
+            stdscr.getch()
+
+        elif (key == curses.KEY_ENTER or key in [10, 13]) and current_row_idx == 4:
+            stdscr.clear()
+            curses.echo()
+            stdscr.addstr(0, 0, 'Hello World')
+            stdscr.addstr(2, 0, "courseId")
+            courseId = int(stdscr.getstr(3, 0).decode())
+            for i in range(0, len(courses)):
+                if (courses[i].get_course_id() == courseId):
+                    stdscr.addstr(6, 0, "CourseId: " + str(courses[i].get_course_id()) + " Course name: " + courses[
+                        i].get_course_name() + " Credit: " + str(courses[i].get_course_credit()))
+            stdscr.getch()
+
+        elif (key == curses.KEY_ENTER or key in [10, 13]) and current_row_idx == 5:
+            stdscr.clear()
+            curses.echo()
+            stdscr.addstr(0, 0, 'Hello World')
+            stdscr.addstr(2, 0, "courseName")
+            courseName = stdscr.getstr(3, 0).decode()
+            showMarkInformationForSpecificCourse(courseName, students, courses, grades, stdscr)
+            stdscr.getch()
+
+        elif (key == curses.KEY_ENTER or key in [10, 13]) and current_row_idx == 6:
+            stdscr.clear()
+            curses.echo()
+            stdscr.addstr(0, 0, 'Hello World')
+            stdscr.addstr(2, 0, "studentId")
+            studentId = int(stdscr.getstr(3, 0).decode())
+            stdscr.addstr(5, 0, "student average marks: ")
+            averageMark = findStudentAverageMark(studentId, grades, courses)
+            averageGpa.insert(len(averageGpa) - 1, [studentId, averageMark])
+            stdscr.addstr(7, 0, str(averageMark))
+            stdscr.getch()
+
+        elif (key == curses.KEY_ENTER or key in [10, 13]) and current_row_idx == 7:
+            stdscr.clear()
+            curses.echo()
+            stdscr.addstr(0, 0, 'Hello World')
+            averageGpa.sort(key=lambda x: x[1], reverse=True)
+            y = 2
+            x = 0
+            for i in range(len(averageGpa)):
+                stdscr.addstr(y + i * 2, x, "StudentId: " + str(averageGpa[i][0]) + " Student AveragGpa: " +
+                str(averageGpa[i][1]))
+
+            stdscr.getch()
+
+        elif (key == curses.KEY_ENTER or key in [10, 13]) and current_row_idx == 8:
             break
 
-    # print("Show Student Info: ")
-    # studentId = int(input("Enter student Id \n"))
-    # for i in range(0, len(students)):
-    #     if (students[i].get_student_id() == studentId):
-    #         students[i].displayStudentInformation()
-    #         break
-    #
-    # print("Show Course Info: ")
-    # courseId = int(input("Enter course Id \n"))
-    # for i in range(0, len(courses)):
-    #     if (courses[i].get_course_id() == courseId):
-    #         courses[i].displayCourseInformation()
-    #         break
+        print_menu(stdscr, current_row_idx)
 
-    # for k in range(len(grades)):
-    #     print(grades[k].get_student_id(), grades[k].get_course_id(), grades[k].get_grade())
-    # print("Show mark for specific course \n")
-    # courseName = input("Enter course name ")
-    # showMarkInformationForSpecificCourse(courseName, students, courses, grades)
+        stdscr.refresh()
 
-    studentId = int(input("Enter student Id \n"))
-    print("Student average marks: \n")
-    averageMark = findStudentAverageMark(studentId, grades, courses)
-    averageGpa.insert(len(averageGpa) - 1, [studentId, averageMark])
 
-    studentId = int(input("Enter student Id \n"))
-    print("Student average marks: \n")
-    averageMark = findStudentAverageMark(studentId, grades, courses)
-    averageGpa.insert(len(averageGpa) - 1, [studentId, averageMark])
-    averageGpa.sort(key=lambda x: x[1], reverse=True)
-    print(averageGpa)
+if __name__ == "__main__":
+    curses.wrapper(main)
