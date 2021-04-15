@@ -4,11 +4,13 @@ from output import *
 import curses
 import time
 import math
+import zipfile
+import os
 
 
 def main(stdscr):
     menu = ['AddStudent', 'AddCourse', 'AddMark', 'ShowStudent', 'ShowCourse', 'ShowMark', 'StudentAverageGpa',
-            'SortDescendingOrder', 'Exit']
+            'SortDescendingOrder', 'Decompress File', 'Exit']
     students = []
     courses = []
     grades = []
@@ -16,6 +18,7 @@ def main(stdscr):
     curses.curs_set(0)
     curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
     current_row_idx = 0
+
     print_menu(stdscr, current_row_idx)
 
     while 1:
@@ -49,7 +52,7 @@ def main(stdscr):
                 m = 0
                 for student in students:
                     for line in sf.readlines():
-                        if str(student.get_student_id()) in line:
+                        if str(line[0]) == str(student.get_student_id()) in line:
                             m = 1
                             break
                         else:
@@ -82,7 +85,7 @@ def main(stdscr):
                 m = 0
                 for course in courses:
                     for line in sf.readlines():
-                        if str(course.get_course_id()) in line:
+                        if str(line[0]) == str(course.get_course_id()) in line:
                             m = 1
                             break
                         else:
@@ -114,7 +117,8 @@ def main(stdscr):
                 m = 0
                 for grade in grades:
                     for line in sf.readlines():
-                        if (str(grade.get_student_id()) and str(grade.get_course_id())) in line:
+                        if str(line[0]) == str(grade.get_student_id()) and line.split("--")[1] == str(
+                                grade.get_course_id()):
                             m = 1
                             break
                         else:
@@ -134,7 +138,7 @@ def main(stdscr):
             with open("student.txt", "r") as sf:
                 m = 0
                 for line in sf.readlines():
-                    if str(studentId) in line:
+                    if str(line[0]) == str(studentId):
                         x = line.split("--")
                         stdscr.addstr(6, 0,
                                       "StudentId: " + str(x[0]) + " Student name: " + x[1] + " Dob: " + x[2])
@@ -158,7 +162,7 @@ def main(stdscr):
             with open("course.txt", "r") as sf:
                 m = 0
                 for line in sf.readlines():
-                    if str(courseId) in line:
+                    if str(line[0]) == str(courseId) in line:
                         x = line.split("--")
                         stdscr.addstr(6, 0,
                                       "CourseId: " + str(x[0]) + " Course name: " + str(x[1]) + " Credit: " + str(x[2]))
@@ -205,6 +209,34 @@ def main(stdscr):
             stdscr.getch()
 
         elif (key == curses.KEY_ENTER or key in [10, 13]) and current_row_idx == 8:
+            stdscr.clear()
+            curses.echo()
+            stdscr.addstr(0, 0, 'We will decompress file into .dat')
+            file_list = ['student.txt', 'course.txt', 'mark.txt']
+            with zipfile.ZipFile('students.dat', 'w') as new_zip:
+                for file_name in file_list:
+                    new_zip.write(file_name)
+
+            stdscr.getch()
+
+        elif (key == curses.KEY_ENTER or key in [10, 13]) and current_row_idx == 9:
+            stdscr.clear()
+            curses.echo()
+            stdscr.addstr(0, 0, 'We will load data from compress file')
+            if os.path.isfile('students.dat'):
+                zip_file = zipfile.ZipFile('students.dat', 'r')
+                zip_file.extractall()
+                if os.path.isfile('student.txt'):
+                    f = open('student.txt', 'r').read().splitlines()
+                    m = 4
+                    for student in f:
+                        stdscr.addstr(m, 0, student)
+                        m += 1
+
+            stdscr.getch()
+
+
+        elif (key == curses.KEY_ENTER or key in [10, 13]) and current_row_idx == 10:
             break
 
         print_menu(stdscr, current_row_idx)
