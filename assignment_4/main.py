@@ -1,13 +1,14 @@
-from pp2021.domains import *
-from pp2021.input import *
-from pp2021.output import *
+from domains import *
+from input import *
+from output import *
 import curses
 import time
 import math
 
+
 def main(stdscr):
     menu = ['AddStudent', 'AddCourse', 'AddMark', 'ShowStudent', 'ShowCourse', 'ShowMark', 'StudentAverageGpa',
-        'SortDescendingOrder', 'Exit']
+            'SortDescendingOrder', 'Exit']
     students = []
     courses = []
     grades = []
@@ -31,7 +32,7 @@ def main(stdscr):
             curses.echo()
             stdscr.addstr(0, 0, 'Hello World')
             m = 0
-            studentId,studentName,dob=add_students(stdscr)
+            studentId, studentName, dob = add_students(stdscr)
             student = Student(studentId, studentName, dob)
             if (len(students) == 0):
                 students.append(student)
@@ -49,7 +50,7 @@ def main(stdscr):
             curses.echo()
             stdscr.addstr(0, 0, 'Hello World')
             m = 0
-            courseId, courseName, noOfCredit=add_courses(stdscr)
+            courseId, courseName, noOfCredit = add_courses(stdscr)
             course = Course(courseId, courseName, noOfCredit)
             if (len(courses) == 0):
                 courses.append(course)
@@ -66,7 +67,7 @@ def main(stdscr):
             curses.echo()
             stdscr.addstr(0, 0, 'Hello World')
             m = 0
-            studentId, courseId, mark=add_marks(stdscr)
+            studentId, courseId, mark = add_marks(stdscr)
             grade = Mark(studentId, courseId, mark)
             if (len(grades) == 0):
                 grades.append(grade)
@@ -82,7 +83,7 @@ def main(stdscr):
             stdscr.clear()
             curses.echo()
             stdscr.addstr(0, 0, 'Hello World')
-            studentId=add_student_id(stdscr)
+            studentId = add_student_id(stdscr)
             for i in range(0, len(students)):
                 if (students[i].get_student_id() == studentId):
                     stdscr.addstr(6, 0,
@@ -115,7 +116,7 @@ def main(stdscr):
             stdscr.clear()
             curses.echo()
             stdscr.addstr(0, 0, 'Hello World')
-            studentId=add_student_id(stdscr)
+            studentId = add_student_id(stdscr)
             stdscr.addstr(5, 0, "student average marks: ")
             averageMark = findStudentAverageMark(studentId, grades, courses)
             averageGpa.insert(len(averageGpa) - 1, [studentId, averageMark])
@@ -131,7 +132,7 @@ def main(stdscr):
             x = 0
             for i in range(len(averageGpa)):
                 stdscr.addstr(y + i * 2, x, "StudentId: " + str(averageGpa[i][0]) + " Student AverageGpa: " +
-                str(averageGpa[i][1]))
+                              str(averageGpa[i][1]))
 
             stdscr.getch()
 
@@ -141,6 +142,7 @@ def main(stdscr):
         print_menu(stdscr, current_row_idx)
 
         stdscr.refresh()
+
 
 if __name__ == '__main__':
     curses.wrapper(main)

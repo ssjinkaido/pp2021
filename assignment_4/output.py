@@ -1,10 +1,9 @@
 import curses
 
 
-
 def print_menu(stdscr, selected_row_idx):
     menu = ['AddStudent', 'AddCourse', 'AddMark', 'ShowStudent', 'ShowCourse', 'ShowMark', 'StudentAverageGpa',
-        'SortDescendingOrder', 'Exit']
+            'SortDescendingOrder', 'Decompress File', 'Exit']
     stdscr.clear()
     h, w = stdscr.getmaxyx()
     for idx, row in enumerate(menu):
